@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"net/http"
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
-	"github.com/metacubex/mihomo/log"
 	"github.com/legiz-ru/prizrak-box/api/models"
 	"github.com/legiz-ru/prizrak-box/pkg/cache"
 	"github.com/legiz-ru/prizrak-box/pkg/constant"
+	"github.com/metacubex/http"
+	"github.com/metacubex/mihomo/log"
 )
 
 // 保存排序后的 Profile 文件
