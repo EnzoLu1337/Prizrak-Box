@@ -112,6 +112,7 @@ setting:
   px:
     auth: Совет по аутентификации
     startup: Автозапуск
+    startMinimized: Запускать свернутым в трей
     dir: Конфиг
     open: Открыть
     import: Импортировать

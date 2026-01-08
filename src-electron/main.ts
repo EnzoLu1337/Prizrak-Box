@@ -103,8 +103,12 @@ const createWindow = (isBoot: boolean) => {
 
     // 页面加载完成再显示，避免白屏
     mainWindow.webContents.once('did-finish-load', () => {
-        if (isBoot) {
-            log.info('静默启动完成');
+        // 获取设置
+        const settings: any = storeGet('setting');
+        const startMinimized = settings?.startMinimized === true;
+
+        if (isBoot || startMinimized) {
+            log.info('静默启动完成 (isBoot:', isBoot, ', startMinimized:', startMinimized, ')');
         } else {
             mainWindow.show();
             mainWindow.focus();
