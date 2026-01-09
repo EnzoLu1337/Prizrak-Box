@@ -107,8 +107,13 @@ const createWindow = (isBoot: boolean) => {
         const settings: any = storeGet('setting');
         const startMinimized = settings?.startMinimized === true;
 
-        if (isBoot || startMinimized) {
-            log.info('静默启动完成 (isBoot:', isBoot, ', startMinimized:', startMinimized, ')');
+        if (isBoot) {
+            log.info('静默启动完成 (isBoot:', isBoot, ')');
+        } else if (startMinimized) {
+            // 启动时最小化到托盘：先隐藏窗口，再隐藏 dock 图标
+            mainWindow.hide();
+            app.dock?.hide();
+            log.info('启动时最小化到托盘');
         } else {
             mainWindow.show();
             mainWindow.focus();
