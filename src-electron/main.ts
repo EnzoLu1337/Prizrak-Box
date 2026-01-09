@@ -13,6 +13,9 @@ const isDev = !app.isPackaged;
 // 主窗口
 let mainWindow: BrowserWindow | null = null;
 
+// Флаг для отслеживания первого запуска с startMinimized
+let isFirstLaunchMinimized = false;
+
 // 深度链接相关
 const DEEP_LINK_SCHEME = 'prizrak-box';
 const DEEP_LINK_HOST_INSTALL = 'install-config';
@@ -107,13 +110,22 @@ const createWindow = (isBoot: boolean) => {
         const settings: any = storeGet('setting');
         const startMinimized = settings?.startMinimized === true;
 
+        log.info('启动设置检查 - isBoot:', isBoot, ', settings:', JSON.stringify(settings), ', startMinimized:', startMinimized);
+
         if (isBoot) {
             log.info('静默启动完成 (isBoot:', isBoot, ')');
         } else if (startMinimized) {
-            // 启动时最小化到托盘：先隐藏窗口，再隐藏 dock 图标
+            // 启动时最小化到托盘：先隐藏окно, затем скрываем dock
+            isFirstLaunchMinimized = true;
             mainWindow.hide();
             app.dock?.hide();
             log.info('启动时最小化到托盘');
+
+            // Сбросим флаг через небольшую задержку, чтобы предотвратить немедленное показывание окна
+            setTimeout(() => {
+                isFirstLaunchMinimized = false;
+                log.info('Флаг isFirstLaunchMinimized сброшен');
+            }, 1000);
         } else {
             mainWindow.show();
             mainWindow.focus();
