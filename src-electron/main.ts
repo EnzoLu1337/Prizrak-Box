@@ -107,7 +107,16 @@ const createWindow = (isBoot: boolean) => {
     // 页面加载完成再显示，避免白屏
     mainWindow.webContents.once('did-finish-load', () => {
         // 获取设置
-        const settings: any = storeGet('setting');
+        let settings: any = storeGet('setting');
+        // Если settings - строка JSON, парсим её
+        if (typeof settings === 'string') {
+            try {
+                settings = JSON.parse(settings);
+            } catch (e) {
+                log.error('Ошибка парсинга настроек:', e);
+                settings = {};
+            }
+        }
         const startMinimized = settings?.startMinimized === true;
 
         log.info('启动设置检查 - isBoot:', isBoot, ', settings:', JSON.stringify(settings), ', startMinimized:', startMinimized);
