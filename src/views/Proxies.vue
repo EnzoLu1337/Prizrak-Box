@@ -101,14 +101,14 @@ async function groups() {
 
 // Update active connections for nested groups (URLTest, Selector, etc.)
 async function updateNestedGroupSelections() {
-  const groupTypes = ['URLtest', 'Selector', 'Fallback', 'LoadBalance', 'Relay'];
+  const groupTypes = ['urltest', 'selector', 'fallback', 'loadbalance', 'relay'];
   const nestedGroups: string[] = [];
 
   // Collect all nodes that are groups themselves
   Object.values(fullViewNodes.value).forEach((nodes) => {
     if (Array.isArray(nodes)) {
       nodes.forEach((node) => {
-        if (groupTypes.includes(node.type)) {
+        if (node.type && groupTypes.includes(node.type.toLowerCase())) {
           nestedGroups.push(node.name);
         }
       });
@@ -118,7 +118,7 @@ async function updateNestedGroupSelections() {
   // Also check current nodeList for non-full view modes
   if (Array.isArray(nodeList.value)) {
     nodeList.value.forEach((node) => {
-      if (groupTypes.includes(node.type) && !nestedGroups.includes(node.name)) {
+      if (node.type && groupTypes.includes(node.type.toLowerCase()) && !nestedGroups.includes(node.name)) {
         nestedGroups.push(node.name);
       }
     });
