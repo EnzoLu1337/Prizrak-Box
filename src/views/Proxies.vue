@@ -519,7 +519,15 @@ watch(groupList, (list) => {
           </div>
           <div class="proxy-nodes-tags">
             <span class="proxy-nodes-tags-left">
-              {{ node["type"] }}
+              <span :class="'proxy-type-badge proxy-type-' + node['type'].toLowerCase()">
+                {{ node["type"] }}
+              </span>
+              <template v-if="selectedProxies[node['name']]">
+                <span class="proxy-selected-arrow">→</span>
+                <span class="proxy-selected-name" :title="selectedProxies[node['name']]">
+                  {{ selectedProxies[node['name']] }}
+                </span>
+              </template>
             </span>
             <span :class="'proxy-nodes-tags-right ' + node['toClass']">
               {{ node["delay"] }} ms
@@ -587,7 +595,15 @@ watch(groupList, (list) => {
                 </div>
                 <div class="proxy-nodes-tags">
                   <span class="proxy-nodes-tags-left">
-                    {{ node["type"] }}
+                    <span :class="'proxy-type-badge proxy-type-' + node['type'].toLowerCase()">
+                      {{ node["type"] }}
+                    </span>
+                    <template v-if="selectedProxies[node['name']]">
+                      <span class="proxy-selected-arrow">→</span>
+                      <span class="proxy-selected-name" :title="selectedProxies[node['name']]">
+                        {{ selectedProxies[node['name']] }}
+                      </span>
+                    </template>
                   </span>
                   <span :class="'proxy-nodes-tags-right ' + node['toClass']">
                     {{ node["delay"] }} ms
@@ -758,10 +774,69 @@ watch(groupList, (list) => {
 
 .proxy-nodes-tags-left {
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
 }
 
 .proxy-nodes-tags-right {
   text-align: right;
+  flex-shrink: 0;
+}
+
+.proxy-type-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  background-color: rgba(var(--hr-color-rgb, 100, 100, 100), 0.2);
+  color: var(--text-color);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.proxy-type-urltest {
+  background-color: rgba(64, 158, 255, 0.2);
+  color: #409eff;
+}
+
+.proxy-type-selector {
+  background-color: rgba(103, 194, 58, 0.2);
+  color: #67c23a;
+}
+
+.proxy-type-fallback {
+  background-color: rgba(230, 162, 60, 0.2);
+  color: #e6a23c;
+}
+
+.proxy-type-loadbalance {
+  background-color: rgba(245, 108, 108, 0.2);
+  color: #f56c6c;
+}
+
+.proxy-type-relay {
+  background-color: rgba(144, 147, 153, 0.2);
+  color: #909399;
+}
+
+.proxy-selected-arrow {
+  color: var(--text-color);
+  opacity: 0.5;
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+.proxy-selected-name {
+  font-size: 12px;
+  color: var(--text-color);
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .toHidden {
