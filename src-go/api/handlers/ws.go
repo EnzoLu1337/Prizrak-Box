@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/legiz-ru/prizrak-box/api/models"
 	"github.com/legiz-ru/prizrak-box/pkg/cache"
 	"github.com/legiz-ru/prizrak-box/pkg/constant"
 	"github.com/metacubex/http"
+	"github.com/metacubex/mihomo/hub/route"
 	"github.com/metacubex/mihomo/log"
 )
 
@@ -23,7 +23,7 @@ func saveProfileOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 升级为 WebSocket 连接
-	conn, _, _, err := ws.UpgradeHTTP(r, w)
+	conn, _, err := route.WsUpgrade(r, w)
 	if err != nil {
 		return
 	}
@@ -71,7 +71,7 @@ func saveWebTestOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 升级为 WebSocket 连接
-	conn, _, _, err := ws.UpgradeHTTP(r, w)
+	conn, _, err := route.WsUpgrade(r, w)
 	if err != nil {
 		return
 	}
