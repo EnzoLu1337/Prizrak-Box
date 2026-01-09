@@ -34,11 +34,16 @@ watch(
     }
 );
 
-// Watch for proxy changes and update tray menu
+// Watch for proxy changes and update tray menu with debounce
+let updateTrayTimeout: any = null;
 watch(
     () => proxiesStore.now,
     () => {
-      updateProxyGroupsInTray();
+      // Debounce to avoid too frequent updates
+      clearTimeout(updateTrayTimeout);
+      updateTrayTimeout = setTimeout(() => {
+        updateProxyGroupsInTray();
+      }, 500);
     }
 );
 
@@ -87,11 +92,35 @@ Events.On("switchProxyInGroup", async (ev: any) => {
 
   try {
     await api.setProxy(group, proxy);
-    proxiesStore.setNow(proxy);
-    // Add small delay to ensure API state is updated before refreshing menu
-    setTimeout(() => {
-      updateProxyGroupsInTray();
-    }, 300);
+    // Don't update store immediately - let API state be the source of truth
+
+    // Poll API to verify the change was applied
+    let retries = 0;
+    const maxRetries = 5;
+    const checkInterval = 200;
+
+    const waitForUpdate = () => {
+      setTimeout(async () => {
+        try {
+          const proxies = await api.getProxies(group, false, false);
+          const current = proxies.find((p: any) => p?.now);
+
+          if (current?.name === proxy || retries >= maxRetries) {
+            // Proxy switched successfully or max retries reached
+            updateProxyGroupsInTray();
+          } else {
+            // Not yet switched, retry
+            retries++;
+            waitForUpdate();
+          }
+        } catch (e) {
+          // On error, just update menu anyway
+          updateProxyGroupsInTray();
+        }
+      }, checkInterval);
+    };
+
+    waitForUpdate();
   } catch (e) {
     if (e['message']) {
       pError(e['message'])
