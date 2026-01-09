@@ -127,10 +127,7 @@ function switchProfiles(menuItem, profile) {
 
 // Switch proxy in a group
 function switchProxyInGroup(menuItem, groupName, proxyName) {
-    if (!menuItem.checked) {
-        menuItem.checked = true
-        return
-    }
+    // Always emit the event to switch proxy, Electron will handle checkbox state
     emitWindow("switchProxyInGroup", {group: groupName, proxy: proxyName});
 }
 
@@ -350,7 +347,7 @@ onWindow("proxyGroups", function (proxyGroups) {
 
             const proxyItems = group.proxies.map((proxy) => ({
                 label: proxy.name,
-                type: 'checkbox',
+                type: 'radio',
                 checked: proxy.now || false,
                 click: (menuItem) => switchProxyInGroup(menuItem, group.name, proxy.name)
             }));

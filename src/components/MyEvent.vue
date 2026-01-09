@@ -88,8 +88,10 @@ Events.On("switchProxyInGroup", async (ev: any) => {
   try {
     await api.setProxy(group, proxy);
     proxiesStore.setNow(proxy);
-    // Update proxy groups to reflect the change
-    updateProxyGroupsInTray();
+    // Add small delay to ensure API state is updated before refreshing menu
+    setTimeout(() => {
+      updateProxyGroupsInTray();
+    }, 300);
   } catch (e) {
     if (e['message']) {
       pError(e['message'])
