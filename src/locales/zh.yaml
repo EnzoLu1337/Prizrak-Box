@@ -299,6 +299,7 @@ tray:
   global: 全局
   direct: 直连
   profiles: 订阅
+  proxyGroups: 代理组
   dashboard: 打开面板
   proxy: 系统代理
   tun: Tun模式

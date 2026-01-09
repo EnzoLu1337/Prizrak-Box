@@ -125,6 +125,15 @@ function switchProfiles(menuItem, profile) {
     emitWindow("switchProfiles", profile);
 }
 
+// Switch proxy in a group
+function switchProxyInGroup(menuItem, groupName, proxyName) {
+    if (!menuItem.checked) {
+        menuItem.checked = true
+        return
+    }
+    emitWindow("switchProxyInGroup", {group: groupName, proxy: proxyName});
+}
+
 const trayMap: Map<any, any> = new Map();
 trayMap.set('tray.show', {
     id: 'tray.show',
@@ -154,6 +163,7 @@ trayMap.set('tray.direct', {
     click: (menuItem) => switchMode(menuItem, 'direct')
 });
 trayMap.set('tray.profiles', {id: 'tray.profiles', label: '订阅', submenu: []});
+trayMap.set('tray.proxyGroups', {id: 'tray.proxyGroups', label: 'Proxy Groups', submenu: []});
 trayMap.set('tray.dashboard', {
     id: 'tray.dashboard',
     label: 'Open Dashboard',
@@ -184,6 +194,7 @@ const createTrayMenu = () => [
     trayMap.get('tray.direct'),
     {type: 'separator'},
     trayMap.get('tray.profiles'),
+    trayMap.get('tray.proxyGroups'),
     trayMap.get('tray.dashboard'),
     {type: 'separator'},
     trayMap.get('tray.proxy'),
@@ -323,6 +334,35 @@ onWindow("dashboards", function (dashboards) {
     const menuItem = trayMap.get(key);
     menuItem.submenu = items;
     menuItem.enabled = items.length > 0;
+    currentMenu = Menu.buildFromTemplate(createTrayMenu());
+    tray.setContextMenu(currentMenu);
+})
+
+onWindow("proxyGroups", function (proxyGroups) {
+    const key = 'tray.proxyGroups';
+    const groupMenus: any[] = [];
+
+    if (Array.isArray(proxyGroups) && proxyGroups.length > 0) {
+        for (const group of proxyGroups) {
+            if (!group || !group.name || !Array.isArray(group.proxies) || group.proxies.length === 0) {
+                continue;
+            }
+
+            const proxyItems = group.proxies.map((proxy) => ({
+                label: proxy.name,
+                type: 'checkbox',
+                checked: proxy.now || false,
+                click: (menuItem) => switchProxyInGroup(menuItem, group.name, proxy.name)
+            }));
+
+            groupMenus.push({
+                label: group.name,
+                submenu: proxyItems
+            });
+        }
+    }
+
+    trayMap.get(key).submenu = groupMenus;
     currentMenu = Menu.buildFromTemplate(createTrayMenu());
     tray.setContextMenu(currentMenu);
 })

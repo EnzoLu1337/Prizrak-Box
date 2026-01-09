@@ -34,6 +34,14 @@ watch(
     }
 );
 
+// Watch for proxy changes and update tray menu
+watch(
+    () => proxiesStore.now,
+    () => {
+      updateProxyGroupsInTray();
+    }
+);
+
 
 // 配置切换
 Events.On("switchProfiles", async (ev: any) => {
@@ -61,6 +69,9 @@ Events.On("switchProfiles", async (ev: any) => {
         }
       })
 
+      // Update proxy groups after profile switch
+      updateProxyGroupsInTray();
+
       pSuccess(t('profiles.switch.success'))
     } catch (e) {
       if (e['message']) {
@@ -69,6 +80,70 @@ Events.On("switchProfiles", async (ev: any) => {
     }
   })
 });
+
+// Switch proxy in group from tray
+Events.On("switchProxyInGroup", async (ev: any) => {
+  const {group, proxy} = ev;
+
+  try {
+    await api.setProxy(group, proxy);
+    proxiesStore.setNow(proxy);
+    // Update proxy groups to reflect the change
+    updateProxyGroupsInTray();
+  } catch (e) {
+    if (e['message']) {
+      pError(e['message'])
+    }
+  }
+});
+
+// Function to update proxy groups in tray
+const updateProxyGroupsInTray = async () => {
+  try {
+    const groups = await api.getGroups();
+    if (!groups || groups.length === 0) {
+      return;
+    }
+
+    const proxyGroupsData = await Promise.all(
+      groups.map(async (groupItem: any) => {
+        const groupName = typeof groupItem === 'string' ? groupItem : groupItem.name;
+        if (!groupName) {
+          return null;
+        }
+
+        try {
+          const proxies = await api.getProxies(groupName, false, false);
+          // Only include groups that have proxies
+          if (proxies && proxies.length > 0) {
+            return {
+              name: groupName,
+              proxies: proxies.map((p: any) => ({
+                name: p.name,
+                now: p.now || false,
+                type: p.type
+              }))
+            };
+          }
+        } catch (e) {
+          // Ignore errors for individual groups
+        }
+        return null;
+      })
+    );
+
+    const validGroups = proxyGroupsData.filter((g) => g !== null);
+
+    if (validGroups.length > 0) {
+      Events.Emit({
+        name: "proxyGroups",
+        data: validGroups
+      });
+    }
+  } catch (e) {
+    console.error('Failed to update proxy groups in tray:', e);
+  }
+};
 
 onMounted(async () => {
   // 获取初始数据
@@ -101,6 +176,9 @@ onMounted(async () => {
     name: "proxy",
     data: menuStore.proxy
   })
+
+  // Send proxy groups data to tray
+  await updateProxyGroupsInTray();
 })
 
 </script>

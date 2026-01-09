@@ -299,6 +299,7 @@ tray:
   global: Глобальный
   direct: Прямой
   profiles: Профили
+  proxyGroups: Группы прокси
   dashboard: Открыть панель
   proxy: Прокси
   tun: TUN

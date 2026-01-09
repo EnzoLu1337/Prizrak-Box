@@ -299,6 +299,7 @@ tray:
   global: Global
   direct: Direct
   profiles: Profiles
+  proxyGroups: Proxy Groups
   dashboard: Open dashboard
   proxy: Proxy
   tun: TUN
