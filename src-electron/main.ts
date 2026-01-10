@@ -13,6 +13,11 @@ const isDev = !app.isPackaged;
 // Set application name for notifications
 app.name = 'Prizrak-Box';
 
+// Set App User Model ID for Windows notifications
+if (process.platform === 'win32') {
+    app.setAppUserModelId('com.legiz-ru.prizrak-box');
+}
+
 // 主窗口
 let mainWindow: BrowserWindow | null = null;
 
