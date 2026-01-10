@@ -23,9 +23,7 @@ const macNotarizeInputsPresent = macSignInputsPresent
     && Boolean(process.env.APPLE_ID && process.env.APP_SPECIFIC_PASSWORD && process.env.TEAM_ID);
 
 const packagerConfig: ForgeConfig['packagerConfig'] = {
-    asar: {
-        unpack: '{**/src/assets/fonts/**,**/node_modules/canvas/**}'
-    },
+    asar: true,
     name: 'Prizrak-Box',
     executableName: 'Prizrak-Box',
     icon: 'build/appicon',

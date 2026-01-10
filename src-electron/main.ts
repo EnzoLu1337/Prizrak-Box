@@ -10,6 +10,9 @@ import {isBootAutoLaunch, updateAutoLaunchRegistration, waitForNetworkReady} fro
 // 是否在开发模式
 const isDev = !app.isPackaged;
 
+// Set application name for notifications
+app.name = 'Prizrak-Box';
+
 // 主窗口
 let mainWindow: BrowserWindow | null = null;
 
@@ -27,6 +30,7 @@ let deepLinkHandlerReady = false;
 process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
 const createWindow = (isBoot: boolean) => {
     let windowOptions: BrowserWindowConstructorOptions = {
+        title: 'Prizrak-Box',
         minWidth: 960,
         minHeight: 660,
         width: 1100,

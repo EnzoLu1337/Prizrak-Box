@@ -4,28 +4,10 @@ import {app, BrowserWindow, ipcMain, Menu, nativeImage, Tray, shell} from 'elect
 import path from "node:path";
 import {storeSet} from "./store";
 import {disableAutoLaunch, enableAutoLaunch} from "./launch";
-import {createCanvas, registerFont} from 'canvas';
-import fs from 'fs';
+import https from 'https';
 
 // 是否在开发模式
 const isDev = !app.isPackaged;
-
-// Register Twemoji font for emoji rendering
-const fontPath = isDev
-    ? path.join(__dirname, '../../src/assets/fonts/TwemojiCountryFlags.woff2')
-    : path.join(process.resourcesPath, 'app.asar.unpacked/src/assets/fonts/TwemojiCountryFlags.woff2');
-
-// Try to register font if it exists
-try {
-    if (fs.existsSync(fontPath)) {
-        registerFont(fontPath, {family: 'Twemoji'});
-        console.log('Twemoji font registered successfully');
-    } else {
-        console.warn('Twemoji font file not found at:', fontPath);
-    }
-} catch (e) {
-    console.error('Failed to register Twemoji font:', e);
-}
 
 // Function to extract emoji from proxy name
 function extractEmoji(text: string): string | null {
@@ -35,26 +17,56 @@ function extractEmoji(text: string): string | null {
     return match ? match[0] : null;
 }
 
-// Function to create emoji icon using Canvas and Twemoji font
-function createEmojiIcon(emoji: string): any {
+// Function to convert emoji to Twemoji codepoint
+function emojiToCodepoint(emoji: string): string {
+    const codePoints = [];
+    for (let i = 0; i < emoji.length; i++) {
+        const code = emoji.codePointAt(i);
+        if (code) {
+            codePoints.push(code.toString(16));
+            // Skip low surrogate for surrogate pairs
+            if (code > 0xFFFF) {
+                i++;
+            }
+        }
+    }
+    return codePoints.join('-');
+}
+
+// Cache for emoji icons
+const emojiIconCache = new Map();
+
+// Function to create emoji icon from Twemoji PNG
+async function createEmojiIcon(emoji: string): Promise<any> {
     try {
-        const size = 16;
-        const canvas = createCanvas(size, size);
-        const ctx = canvas.getContext('2d');
+        // Check cache first
+        if (emojiIconCache.has(emoji)) {
+            return emojiIconCache.get(emoji);
+        }
 
-        // Set font with Twemoji first, fallback to system emoji fonts
-        ctx.font = '14px Twemoji, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        // Convert emoji to codepoint for Twemoji URL
+        const codepoint = emojiToCodepoint(emoji);
 
-        // Draw emoji
-        ctx.fillText(emoji, size / 2, size / 2);
+        // Twemoji CDN URL (72x72 PNG)
+        const url = `https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/${codepoint}.png`;
 
-        // Convert canvas to PNG buffer
-        const buffer = canvas.toBuffer('image/png');
+        // Download icon
+        const buffer = await new Promise<Buffer>((resolve, reject) => {
+            https.get(url, (res) => {
+                const chunks: Buffer[] = [];
+                res.on('data', (chunk) => chunks.push(chunk));
+                res.on('end', () => resolve(Buffer.concat(chunks)));
+                res.on('error', reject);
+            }).on('error', reject);
+        });
 
-        // Create native image from buffer
-        return nativeImage.createFromBuffer(buffer);
+        // Create native image and resize to 16x16
+        const icon = nativeImage.createFromBuffer(buffer).resize({width: 16, height: 16});
+
+        // Cache the icon
+        emojiIconCache.set(emoji, icon);
+
+        return icon;
     } catch (e) {
         console.error('Failed to create emoji icon:', e);
         return null;
@@ -393,7 +405,7 @@ onWindow("dashboards", function (dashboards) {
     tray.setContextMenu(currentMenu);
 })
 
-onWindow("proxyGroups", function (proxyGroups) {
+onWindow("proxyGroups", async function (proxyGroups) {
     const key = 'tray.proxyGroups';
     const groupMenus: any[] = [];
 
@@ -403,7 +415,8 @@ onWindow("proxyGroups", function (proxyGroups) {
                 continue;
             }
 
-            const proxyItems = group.proxies.map((proxy) => {
+            // Create all proxy items with icons loaded in parallel
+            const proxyItems = await Promise.all(group.proxies.map(async (proxy) => {
                 const emoji = extractEmoji(proxy.name);
                 const menuItem: any = {
                     label: proxy.name,
@@ -414,7 +427,7 @@ onWindow("proxyGroups", function (proxyGroups) {
 
                 // If emoji found, create icon from it and remove emoji from label
                 if (emoji) {
-                    const icon = createEmojiIcon(emoji);
+                    const icon = await createEmojiIcon(emoji);
                     if (icon) {
                         menuItem.icon = icon;
                         menuItem.label = removeEmoji(proxy.name);
@@ -422,7 +435,7 @@ onWindow("proxyGroups", function (proxyGroups) {
                 }
 
                 return menuItem;
-            });
+            }));
 
             groupMenus.push({
                 label: group.name,
