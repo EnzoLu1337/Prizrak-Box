@@ -91,7 +91,8 @@ Events.On("switchProxyInGroup", async (ev: any) => {
   const {group, proxy} = ev;
 
   try {
-    await api.setProxy(group, proxy);
+    // Use correct API format: {name: proxyName}
+    await api.setProxy(group, {name: proxy});
     // Don't update store immediately - let API state be the source of truth
 
     // Poll API to verify the change was applied
