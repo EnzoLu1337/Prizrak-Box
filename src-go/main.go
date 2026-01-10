@@ -61,7 +61,7 @@ func main() {
 		prizrak.Release()
 		utils.UnlockSingleton()
 		executor.Shutdown()
-		sys.DisableProxy()
+		sys.DisableProxy(true) // Всегда отключать системный прокси при выходе
 	}
 
 }

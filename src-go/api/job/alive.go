@@ -75,7 +75,7 @@ func Exit(needExit bool) {
 	cache.Close()
 	utils.UnlockSingleton()
 	executor.Shutdown()
-	sys.DisableProxy()
+	sys.DisableProxy(true) // Всегда отключать системный прокси при выходе
 	if needExit {
 		os.Exit(0)
 	}

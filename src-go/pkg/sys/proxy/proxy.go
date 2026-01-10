@@ -22,6 +22,9 @@ func EnableProxy(host string, port int, systemProxyMode bool) error {
 }
 
 // DisableProxy 关闭代理
-func DisableProxy() {
-	_ = OffAll()
+func DisableProxy(systemProxyMode bool) {
+	// 只有在 systemProxyMode 为 true 时才关闭系统代理
+	if systemProxyMode {
+		_ = OffAll()
+	}
 }

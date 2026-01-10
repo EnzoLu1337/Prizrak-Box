@@ -71,7 +71,11 @@ func enableProxy(w http.ResponseWriter, r *http.Request) {
 }
 
 func disableProxy(w http.ResponseWriter, r *http.Request) {
-	sys.DisableProxy()
+	// Получаем настройку systemProxyMode из базы данных
+	var mi models.Mihomo
+	_ = cache.Get(constant.Mihomo, &mi)
+
+	sys.DisableProxy(mi.SystemProxyMode)
 	log.Warnln("System proxy disabled")
 	if !executor.GetGeneral().Tun.Enable {
 		statistic.DefaultManager.Range(func(c statistic.Tracker) bool {
