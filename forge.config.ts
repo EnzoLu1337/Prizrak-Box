@@ -24,7 +24,7 @@ const macNotarizeInputsPresent = macSignInputsPresent
 
 const packagerConfig: ForgeConfig['packagerConfig'] = {
     asar: {
-        unpack: '**/src/assets/fonts/**'
+        unpack: '{**/src/assets/fonts/**,**/node_modules/canvas/**}'
     },
     name: 'Prizrak-Box',
     executableName: 'Prizrak-Box',
