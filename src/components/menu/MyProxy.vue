@@ -65,11 +65,13 @@ async function doSwitch() {
         "mixed-port": settingStore.port,
         "bind-address": settingStore.bindAddress,
       })
-      // 未被占用开启代理
-      await api.enableProxy({
-        "bindAddress": settingStore.bindAddress,
-        "port": settingStore.port,
-      })
+      // 如果включен режим системного прокси, то включаем системный прокси
+      if (settingStore.systemProxyMode) {
+        await api.enableProxy({
+          "bindAddress": settingStore.bindAddress,
+          "port": settingStore.port,
+        })
+      }
       ok = true
       pSuccess(t("proxy-switch-on"));
     } catch (e) {
@@ -78,7 +80,10 @@ async function doSwitch() {
       }
     }
   } else {
-    await api.disableProxy()
+    // Отключаем системный прокси только если он был включен
+    if (settingStore.systemProxyMode) {
+      await api.disableProxy()
+    }
     ok = true
     pWarning(t("proxy-switch-off"));
   }
