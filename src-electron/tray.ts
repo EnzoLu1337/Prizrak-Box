@@ -4,36 +4,56 @@ import {app, BrowserWindow, ipcMain, Menu, nativeImage, Tray, shell} from 'elect
 import path from "node:path";
 import {storeSet} from "./store";
 import {disableAutoLaunch, enableAutoLaunch} from "./launch";
+import {createCanvas, registerFont} from 'canvas';
+import fs from 'fs';
 
 // 是否在开发模式
 const isDev = !app.isPackaged;
 
+// Register Twemoji font for emoji rendering
+const fontPath = isDev
+    ? path.join(__dirname, '../../src/assets/fonts/TwemojiCountryFlags.woff2')
+    : path.join(process.resourcesPath, 'app.asar.unpacked/src/assets/fonts/TwemojiCountryFlags.woff2');
+
+// Try to register font if it exists
+try {
+    if (fs.existsSync(fontPath)) {
+        registerFont(fontPath, {family: 'Twemoji'});
+        console.log('Twemoji font registered successfully');
+    } else {
+        console.warn('Twemoji font file not found at:', fontPath);
+    }
+} catch (e) {
+    console.error('Failed to register Twemoji font:', e);
+}
+
 // Function to extract emoji from proxy name
 function extractEmoji(text: string): string | null {
-    // Regex to match emoji characters
-    const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E0}-\u{1F1FF}]/u;
+    // Regex to match emoji characters (including flag emojis which are 2 regional indicator symbols)
+    const emojiRegex = /[\u{1F1E6}-\u{1F1FF}]{2}|[\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}]/u;
     const match = text.match(emojiRegex);
     return match ? match[0] : null;
 }
 
-// Function to create emoji icon for tray menu
+// Function to create emoji icon using Canvas and Twemoji font
 function createEmojiIcon(emoji: string): any {
     try {
-        // Create SVG with emoji
         const size = 16;
-        const svg = `
-            <svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
-                <text x="50%" y="50%"
-                      text-anchor="middle"
-                      dominant-baseline="central"
-                      font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, Android Emoji, EmojiSymbols, sans-serif"
-                      font-size="12"
-                      fill="#000000">${emoji}</text>
-            </svg>
-        `;
+        const canvas = createCanvas(size, size);
+        const ctx = canvas.getContext('2d');
 
-        // Create native image from SVG
-        const buffer = Buffer.from(svg, 'utf-8');
+        // Set font with Twemoji first, fallback to system emoji fonts
+        ctx.font = '14px Twemoji, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // Draw emoji
+        ctx.fillText(emoji, size / 2, size / 2);
+
+        // Convert canvas to PNG buffer
+        const buffer = canvas.toBuffer('image/png');
+
+        // Create native image from buffer
         return nativeImage.createFromBuffer(buffer);
     } catch (e) {
         console.error('Failed to create emoji icon:', e);
@@ -43,7 +63,7 @@ function createEmojiIcon(emoji: string): any {
 
 // Function to remove emoji from text
 function removeEmoji(text: string): string {
-    return text.replace(/[\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E0}-\u{1F1FF}]/gu, '').trim();
+    return text.replace(/[\u{1F1E6}-\u{1F1FF}]{2}|[\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}]/gu, '').trim();
 }
 
 // 托盘

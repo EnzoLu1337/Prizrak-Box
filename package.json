@@ -56,6 +56,7 @@
     "apexcharts": "^4.7.0",
     "auto-launch": "^5.0.6",
     "axios": "^1.8.4",
+    "canvas": "^3.2.0",
     "chroma-js": "^3.1.2",
     "colorthief": "^2.6.0",
     "date-fns": "^4.1.0",
