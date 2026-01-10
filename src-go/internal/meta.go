@@ -155,14 +155,15 @@ func startCore(profile models.Profile, reload bool) {
 	_ = cache.Get(constant.Mihomo, &mi)
 	if mi.BindAddress == "" {
 		mi = models.Mihomo{
-			Mode:        "rule",
-			Proxy:       false,
-			Tun:         false,
-			Port:        9697,
-			BindAddress: "127.0.0.1",
-			Stack:       "Mixed",
-			Dns:         false,
-			Ipv6:        false,
+			Mode:            "rule",
+			Proxy:           false,
+			Tun:             false,
+			Port:            9697,
+			BindAddress:     "127.0.0.1",
+			Stack:           "Mixed",
+			Dns:             false,
+			Ipv6:            false,
+			SystemProxyMode: true,
 		}
 	}
 	rawCfg.Mode = tunnel.ModeMapping[mi.Mode]
@@ -216,7 +217,7 @@ func startCore(profile models.Profile, reload bool) {
 
 	// 代理开启
 	if mi.Proxy {
-		_ = sysProxy.EnableProxy(mi.BindAddress, mi.Port)
+		_ = sysProxy.EnableProxy(mi.BindAddress, mi.Port, mi.SystemProxyMode)
 	}
 	// 存储配置
 	_ = cache.Put(constant.Mihomo, mi)

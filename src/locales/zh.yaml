@@ -111,6 +111,7 @@ setting:
     bind-error: 错误的地址
   px:
     auth: 授权提示
+    systemProxyMode: 系统代理模式
     startup: 开机自启
     startMinimized: 启动时最小化到托盘
     dir: 配置目录

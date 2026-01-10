@@ -69,6 +69,7 @@ async function doSwitch() {
       await api.enableProxy({
         "bindAddress": settingStore.bindAddress,
         "port": settingStore.port,
+        "systemProxyMode": settingStore.systemProxyMode,
       })
       ok = true
       pSuccess(t("proxy-switch-on"));

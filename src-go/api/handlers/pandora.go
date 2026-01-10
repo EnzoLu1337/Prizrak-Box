@@ -55,8 +55,9 @@ func getPrizrakVersion(w http.ResponseWriter, r *http.Request) {
 func enableProxy(w http.ResponseWriter, r *http.Request) {
 	// 读取请求体
 	mi := struct {
-		BindAddress string `json:"bindAddress"`
-		Port        int    `json:"port"`
+		BindAddress     string `json:"bindAddress"`
+		Port            int    `json:"port"`
+		SystemProxyMode bool   `json:"systemProxyMode"`
 	}{}
 	if err := render.DecodeJSON(r.Body, &mi); err != nil {
 		ErrorResponse(w, r, err)
@@ -64,7 +65,7 @@ func enableProxy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 开启
-	_ = sys.EnableProxy(mi.BindAddress, mi.Port)
+	_ = sys.EnableProxy(mi.BindAddress, mi.Port, mi.SystemProxyMode)
 
 	render.NoContent(w, r)
 }

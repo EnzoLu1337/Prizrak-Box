@@ -213,6 +213,12 @@ watch(() => settingStore.startup, (newValue) => {
   pUpdateMihomo(menuStore, settingStore, api)
 });
 
+// 系统代理模式
+watch(() => settingStore.systemProxyMode, () => {
+  // 同步 mihomo 配置
+  pUpdateMihomo(menuStore, settingStore, api)
+});
+
 // 打开配置目录
 function pxConfigDir() {
   // @ts-ignore
@@ -356,6 +362,13 @@ watch(dashboardDialogVisible, (visible) => {
             </el-tooltip>
             <el-switch
                 v-model="settingStore.hwid"
+                class="set-switch"
+            />
+          </li>
+          <li>
+            <strong>{{ $t('setting.px.systemProxyMode') }} :</strong>
+            <el-switch
+                v-model="settingStore.systemProxyMode"
                 class="set-switch"
             />
           </li>

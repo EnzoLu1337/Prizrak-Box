@@ -111,6 +111,7 @@ setting:
     bind-error: Неверный адрес
   px:
     auth: Совет по аутентификации
+    systemProxyMode: Режим системного прокси
     startup: Автозапуск
     startMinimized: Запускать свернутым в трей
     dir: Конфиг

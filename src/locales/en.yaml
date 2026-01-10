@@ -111,6 +111,7 @@ setting:
     bind-error: Wrong address
   px:
     auth: Auth Tip
+    systemProxyMode: System Proxy Mode
     startup: Boot Startup
     startMinimized: Start Minimized to Tray
     dir: Config

@@ -9,5 +9,6 @@ export function pUpdateMihomo(menuStore: any, settingStore: any, api: any): void
         stack: settingStore.stack,
         dns: settingStore.dns,
         ipv6: settingStore.ipv6,
+        systemProxyMode: settingStore.systemProxyMode,
     })
 }
