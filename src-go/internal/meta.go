@@ -216,8 +216,9 @@ func startCore(profile models.Profile, reload bool) {
 	go executor.ApplyConfig(NowConfig, !reload)
 
 	// 代理开启
+	// При старте всегда включаем системный прокси если прокси включен (обратная совместимость)
 	if mi.Proxy {
-		_ = sysProxy.EnableProxy(mi.BindAddress, mi.Port, mi.SystemProxyMode)
+		_ = sysProxy.EnableProxy(mi.BindAddress, mi.Port, true)
 	}
 	// 存储配置
 	_ = cache.Put(constant.Mihomo, mi)
