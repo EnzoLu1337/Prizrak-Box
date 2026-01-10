@@ -412,13 +412,12 @@ onWindow("proxyGroups", function (proxyGroups) {
                     click: (menuItem) => switchProxyInGroup(menuItem, group.name, proxy.name)
                 };
 
-                // If emoji found, create icon from it
+                // If emoji found, create icon from it and remove emoji from label
                 if (emoji) {
                     const icon = createEmojiIcon(emoji);
                     if (icon) {
                         menuItem.icon = icon;
-                        // Optionally remove emoji from label
-                        // menuItem.label = removeEmoji(proxy.name);
+                        menuItem.label = removeEmoji(proxy.name);
                     }
                 }
 
