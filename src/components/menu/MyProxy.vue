@@ -95,10 +95,18 @@ async function doSwitch() {
       ok = true
       pWarning(t("proxy-switch-off"));
     } catch (e) {
-      // При таймауте все равно считаем успешным и обновляем UI
-      ok = true
-      pWarning(t("proxy-switch-off"));
-      console.warn('disableProxy timeout, but continuing:', e)
+      // При таймауте НЕ обновляем UI - показываем ошибку
+      console.error('disableProxy failed:', e)
+
+      const errorMsg = 'Не удалось отключить прокси через приложение. ' +
+        'Требуется перезапуск с обновленной версией. ' +
+        '\n\nДля срочного отключения выполните в PowerShell:\n' +
+        'reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings" /v ProxyEnable /t REG_DWORD /d 0 /f'
+
+      pError(errorMsg)
+      alert(errorMsg) // Показываем alert чтобы можно было скопировать команду
+
+      // ok остается false - UI не обновится, прокси останется в положении ВКЛ
     }
   }
 
