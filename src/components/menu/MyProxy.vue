@@ -42,6 +42,16 @@ async function selected() {
 }
 
 
+// Вспомогательная функция с таймаутом
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Operation timeout')), timeoutMs)
+    )
+  ])
+}
+
 // 代理开关
 async function doSwitch() {
   let ok = false
@@ -79,9 +89,17 @@ async function doSwitch() {
       }
     }
   } else {
-    await api.disableProxy()
-    ok = true
-    pWarning(t("proxy-switch-off"));
+    try {
+      // Используем таймаут 5 секунд для операции отключения
+      await withTimeout(api.disableProxy(), 5000)
+      ok = true
+      pWarning(t("proxy-switch-off"));
+    } catch (e) {
+      // При таймауте все равно считаем успешным и обновляем UI
+      ok = true
+      pWarning(t("proxy-switch-off"));
+      console.warn('disableProxy timeout, but continuing:', e)
+    }
   }
 
   // 同步配置

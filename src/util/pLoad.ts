@@ -48,8 +48,11 @@ export async function pLoad(tip: any, callback: any) {
         text: tip,
         background: "rgba(0, 0, 0, 0.2)",
     });
-    await callback();
-    loading.close();
+    try {
+        await callback();
+    } finally {
+        loading.close();
+    }
 }
 
 
