@@ -8,6 +8,44 @@ import {disableAutoLaunch, enableAutoLaunch} from "./launch";
 // 是否在开发模式
 const isDev = !app.isPackaged;
 
+// Function to extract emoji from proxy name
+function extractEmoji(text: string): string | null {
+    // Regex to match emoji characters
+    const emojiRegex = /[\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E0}-\u{1F1FF}]/u;
+    const match = text.match(emojiRegex);
+    return match ? match[0] : null;
+}
+
+// Function to create emoji icon for tray menu
+function createEmojiIcon(emoji: string): any {
+    try {
+        // Create SVG with emoji
+        const size = 16;
+        const svg = `
+            <svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
+                <text x="50%" y="50%"
+                      text-anchor="middle"
+                      dominant-baseline="central"
+                      font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, Android Emoji, EmojiSymbols, sans-serif"
+                      font-size="12"
+                      fill="#000000">${emoji}</text>
+            </svg>
+        `;
+
+        // Create native image from SVG
+        const buffer = Buffer.from(svg, 'utf-8');
+        return nativeImage.createFromBuffer(buffer);
+    } catch (e) {
+        console.error('Failed to create emoji icon:', e);
+        return null;
+    }
+}
+
+// Function to remove emoji from text
+function removeEmoji(text: string): string {
+    return text.replace(/[\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E0}-\u{1F1FF}]/gu, '').trim();
+}
+
 // 托盘
 let tray: Tray;
 // 托盘菜单
@@ -345,12 +383,27 @@ onWindow("proxyGroups", function (proxyGroups) {
                 continue;
             }
 
-            const proxyItems = group.proxies.map((proxy) => ({
-                label: proxy.name,
-                type: 'radio',
-                checked: proxy.now || false,
-                click: (menuItem) => switchProxyInGroup(menuItem, group.name, proxy.name)
-            }));
+            const proxyItems = group.proxies.map((proxy) => {
+                const emoji = extractEmoji(proxy.name);
+                const menuItem: any = {
+                    label: proxy.name,
+                    type: 'radio',
+                    checked: proxy.now || false,
+                    click: (menuItem) => switchProxyInGroup(menuItem, group.name, proxy.name)
+                };
+
+                // If emoji found, create icon from it
+                if (emoji) {
+                    const icon = createEmojiIcon(emoji);
+                    if (icon) {
+                        menuItem.icon = icon;
+                        // Optionally remove emoji from label
+                        // menuItem.label = removeEmoji(proxy.name);
+                    }
+                }
+
+                return menuItem;
+            });
 
             groupMenus.push({
                 label: group.name,
