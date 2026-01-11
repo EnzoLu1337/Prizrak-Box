@@ -4,7 +4,6 @@ import {app, BrowserWindow, ipcMain, Menu, nativeImage, Tray, shell} from 'elect
 import path from "node:path";
 import {storeSet} from "./store";
 import {disableAutoLaunch, enableAutoLaunch} from "./launch";
-import https from 'https';
 
 // 是否在开发模式
 const isDev = !app.isPackaged;
@@ -17,26 +16,10 @@ function extractEmoji(text: string): string | null {
     return match ? match[0] : null;
 }
 
-// Function to convert emoji to Twemoji codepoint
-function emojiToCodepoint(emoji: string): string {
-    const codePoints = [];
-    for (let i = 0; i < emoji.length; i++) {
-        const code = emoji.codePointAt(i);
-        if (code) {
-            codePoints.push(code.toString(16));
-            // Skip low surrogate for surrogate pairs
-            if (code > 0xFFFF) {
-                i++;
-            }
-        }
-    }
-    return codePoints.join('-');
-}
-
 // Cache for emoji icons
 const emojiIconCache = new Map();
 
-// Function to create emoji icon from Twemoji PNG
+// Function to create emoji icon from SVG (using system fonts, no external dependencies)
 async function createEmojiIcon(emoji: string): Promise<any> {
     try {
         // Check cache first
@@ -44,24 +27,19 @@ async function createEmojiIcon(emoji: string): Promise<any> {
             return emojiIconCache.get(emoji);
         }
 
-        // Convert emoji to codepoint for Twemoji URL
-        const codepoint = emojiToCodepoint(emoji);
+        // Create SVG with emoji text using system fonts
+        // Priority order: Segoe UI Emoji (Windows) → Apple Color Emoji (macOS) → Noto Color Emoji (Linux)
+        const svg = `
+            <svg width="72" height="72" viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+                <text x="36" y="36" font-size="56" text-anchor="middle" dominant-baseline="central" font-family="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif">
+                    ${emoji}
+                </text>
+            </svg>
+        `.trim();
 
-        // Twemoji CDN URL (72x72 PNG)
-        const url = `https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/72x72/${codepoint}.png`;
-
-        // Download icon
-        const buffer = await new Promise<Buffer>((resolve, reject) => {
-            https.get(url, (res) => {
-                const chunks: Buffer[] = [];
-                res.on('data', (chunk) => chunks.push(chunk));
-                res.on('end', () => resolve(Buffer.concat(chunks)));
-                res.on('error', reject);
-            }).on('error', reject);
-        });
-
-        // Create native image and resize to 16x16
-        const icon = nativeImage.createFromBuffer(buffer).resize({width: 16, height: 16});
+        // Create native image from SVG data URL and resize to 16x16
+        const dataUrl = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+        const icon = nativeImage.createFromDataURL(dataUrl).resize({width: 16, height: 16});
 
         // Cache the icon
         emojiIconCache.set(emoji, icon);
