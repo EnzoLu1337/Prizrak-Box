@@ -231,9 +231,11 @@ export async function installService(): Promise<boolean> {
                     });
                 };
 
-                const result = await tryInstall(0);
-                storeSet('serviceMode', result);
-                resolve(result);
+                (async () => {
+                    const result = await tryInstall(0);
+                    storeSet('serviceMode', result);
+                    resolve(result);
+                })();
                 break;
             }
 
@@ -309,9 +311,11 @@ export async function uninstallService(): Promise<boolean> {
                     });
                 };
 
-                const result = await tryUninstall(0);
-                storeSet('serviceMode', false);
-                resolve(result);
+                (async () => {
+                    const result = await tryUninstall(0);
+                    storeSet('serviceMode', false);
+                    resolve(result);
+                })();
                 break;
             }
 
