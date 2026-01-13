@@ -80,6 +80,10 @@ async function doSwitch() {
       }
     }
   } else {
+    // Отключаем mixed-port в Mihomo, чтобы он перестал слушать порт
+    await api.updateConfigs({
+      "mixed-port": 0,
+    })
     // Всегда отключаем системный прокси при выключении переключателя прокси
     await api.disableProxy()
     ok = true
