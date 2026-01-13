@@ -329,6 +329,8 @@ service:
   status-running: 服务运行中
   status-stopped: 服务已停止
   status-not-installed: 服务未安装
+  status-no-admin: 无管理员权限运行
+  check-status: 检查状态
   mode: 服务模式
   mode-description: 允许无需管理员权限使用 TUN 模式
 

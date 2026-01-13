@@ -37,6 +37,7 @@ interface IPCResponse {
 export interface ServiceStatus {
     installed: boolean;
     running: boolean;
+    isAdmin: boolean;
     version?: string;
 }
 
@@ -114,22 +115,25 @@ export async function getServiceStatus(): Promise<ServiceStatus> {
     const installed = fs.existsSync(servicePath);
 
     if (!installed) {
-        return {installed: false, running: false};
+        return {installed: false, running: false, isAdmin: false};
     }
 
     try {
         const running = await isServiceRunning();
         if (running) {
             const versionResponse = await sendIPCRequest({command: 'version'}, 2000);
+            const adminResponse = await sendIPCRequest({command: 'is_admin'}, 2000);
+            const isAdmin = adminResponse.success && adminResponse.data === true;
             return {
                 installed: true,
                 running: true,
+                isAdmin: isAdmin,
                 version: versionResponse.data
             };
         }
-        return {installed: true, running: false};
+        return {installed: true, running: false, isAdmin: false};
     } catch {
-        return {installed: true, running: false};
+        return {installed: true, running: false, isAdmin: false};
     }
 }
 
@@ -206,8 +210,8 @@ export async function installService(): Promise<boolean> {
                 // Linux: используем pkexec
                 const methods = ['/usr/bin/pkexec', 'pkexec', '/usr/bin/sudo', 'sudo'];
 
-                const tryInstall = async (index: number): Promise<boolean> => {
-                    if (index >= methods.length) return false;
+                const tryInstall = (index: number): Promise<boolean> => {
+                    if (index >= methods.length) return Promise.resolve(false);
 
                     const method = methods[index];
                     return new Promise((res) => {
@@ -215,27 +219,26 @@ export async function installService(): Promise<boolean> {
                             env: {...process.env, DISPLAY: process.env.DISPLAY},
                         });
 
-                        proc.on('exit', async (code) => {
+                        proc.on('exit', (code) => {
                             if (code === 0) {
-                                await new Promise(r => setTimeout(r, 2000));
-                                const running = await isServiceRunning();
-                                res(running);
+                                setTimeout(() => {
+                                    isServiceRunning().then(running => res(running));
+                                }, 2000);
                             } else {
-                                res(await tryInstall(index + 1));
+                                tryInstall(index + 1).then(result => res(result));
                             }
                         });
 
-                        proc.on('error', async () => {
-                            res(await tryInstall(index + 1));
+                        proc.on('error', () => {
+                            tryInstall(index + 1).then(result => res(result));
                         });
                     });
                 };
 
-                (async () => {
-                    const result = await tryInstall(0);
+                tryInstall(0).then((result) => {
                     storeSet('serviceMode', result);
                     resolve(result);
-                })();
+                });
                 break;
             }
 
@@ -293,8 +296,8 @@ export async function uninstallService(): Promise<boolean> {
             case 'linux': {
                 const methods = ['/usr/bin/pkexec', 'pkexec', '/usr/bin/sudo', 'sudo'];
 
-                const tryUninstall = async (index: number): Promise<boolean> => {
-                    if (index >= methods.length) return false;
+                const tryUninstall = (index: number): Promise<boolean> => {
+                    if (index >= methods.length) return Promise.resolve(false);
 
                     const method = methods[index];
                     return new Promise((res) => {
@@ -304,18 +307,17 @@ export async function uninstallService(): Promise<boolean> {
 
                         proc.on('exit', (code) => {
                             if (code === 0) res(true);
-                            else res(tryUninstall(index + 1));
+                            else tryUninstall(index + 1).then(result => res(result));
                         });
 
-                        proc.on('error', () => res(tryUninstall(index + 1)));
+                        proc.on('error', () => tryUninstall(index + 1).then(result => res(result)));
                     });
                 };
 
-                (async () => {
-                    const result = await tryUninstall(0);
+                tryUninstall(0).then((result) => {
                     storeSet('serviceMode', false);
                     resolve(result);
-                })();
+                });
                 break;
             }
 

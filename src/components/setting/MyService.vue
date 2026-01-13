@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {useI18n} from "vue-i18n";
-import {pLoad, pSuccess, pError, pWarning} from "@/util/pLoad";
+import {pSuccess, pError, pWarning} from "@/util/pLoad";
 
 const {t} = useI18n();
 
@@ -8,23 +8,27 @@ const {t} = useI18n();
 const serviceStatus = ref<{
   installed: boolean;
   running: boolean;
+  isAdmin: boolean;
   version?: string;
 }>({
   installed: false,
-  running: false
+  running: false,
+  isAdmin: false
 });
 
 const loading = ref(false);
 
 // Получение статуса сервиса
 async function fetchServiceStatus() {
+  loading.value = true;
   try {
     // @ts-ignore
     const status = await window.pxService.getStatus();
     serviceStatus.value = status;
   } catch (e) {
-    serviceStatus.value = {installed: false, running: false};
+    serviceStatus.value = {installed: false, running: false, isAdmin: false};
   }
+  loading.value = false;
 }
 
 // Установка сервиса
@@ -70,8 +74,11 @@ const statusText = computed(() => {
   if (!serviceStatus.value.installed) {
     return t('service.status-not-installed');
   }
-  if (serviceStatus.value.running) {
+  if (serviceStatus.value.running && serviceStatus.value.isAdmin) {
     return t('service.status-running');
+  }
+  if (serviceStatus.value.running && !serviceStatus.value.isAdmin) {
+    return t('service.status-no-admin');
   }
   return t('service.status-stopped');
 });
@@ -80,8 +87,11 @@ const statusType = computed(() => {
   if (!serviceStatus.value.installed) {
     return 'info';
   }
-  if (serviceStatus.value.running) {
+  if (serviceStatus.value.running && serviceStatus.value.isAdmin) {
     return 'success';
+  }
+  if (serviceStatus.value.running && !serviceStatus.value.isAdmin) {
+    return 'danger';
   }
   return 'warning';
 });
@@ -103,7 +113,6 @@ onMounted(() => {
     <p class="service-setting__description">{{ t('service.mode-description') }}</p>
     <div class="service-setting__actions">
       <el-button
-          v-if="!serviceStatus.installed"
           type="primary"
           :loading="loading"
           @click="installService"
@@ -111,7 +120,7 @@ onMounted(() => {
         {{ t('service.install-btn') }}
       </el-button>
       <el-button
-          v-else
+          v-if="serviceStatus.installed || serviceStatus.running"
           type="danger"
           :loading="loading"
           @click="uninstallService"
@@ -122,7 +131,7 @@ onMounted(() => {
           :loading="loading"
           @click="fetchServiceStatus"
       >
-        {{ t('refresh') }}
+        {{ t('service.check-status') }}
       </el-button>
     </div>
   </div>

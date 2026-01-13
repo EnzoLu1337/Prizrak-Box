@@ -340,7 +340,10 @@ watch(() => settingStore.systemProxyMode, async (newValue, oldValue) => {
   left: 31px;
 }
 
-/* Стили для диалога сервиса */
+</style>
+
+<style>
+/* Стили для диалога сервиса (не scoped, т.к. el-dialog рендерится вне компонента) */
 .service-dialog {
   padding: 10px 0;
 }
@@ -348,12 +351,11 @@ watch(() => settingStore.systemProxyMode, async (newValue, oldValue) => {
 .service-dialog__message {
   font-size: 16px;
   margin-bottom: 12px;
-  color: var(--text-color);
+  font-weight: 500;
 }
 
 .service-dialog__description {
   font-size: 14px;
-  color: var(--text-color);
   opacity: 0.8;
   line-height: 1.6;
 }

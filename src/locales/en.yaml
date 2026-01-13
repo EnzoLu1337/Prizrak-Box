@@ -329,6 +329,8 @@ service:
   status-running: Service is running
   status-stopped: Service is stopped
   status-not-installed: Service is not installed
+  status-no-admin: Running without admin rights
+  check-status: Check Status
   mode: Service Mode
   mode-description: Allows TUN mode without administrator privileges
 
