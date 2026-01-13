@@ -80,10 +80,8 @@ async function doSwitch() {
       }
     }
   } else {
-    // Отключаем системный прокси только если он был включен
-    if (settingStore.systemProxyMode) {
-      await api.disableProxy()
-    }
+    // Всегда отключаем системный прокси при выключении переключателя прокси
+    await api.disableProxy()
     ok = true
     pWarning(t("proxy-switch-off"));
   }
@@ -169,6 +167,31 @@ onMounted(async () => {
   if (homeStore.os != "Windows" && menuStore.tun) {
     await api.waitRunning()
     await tunSwitch()
+  }
+})
+
+// Отслеживание изменения настройки "Режим системного прокси"
+watch(() => settingStore.systemProxyMode, async (newValue, oldValue) => {
+  // Применяем изменения только если прокси уже включен
+  if (menuStore.proxy) {
+    if (newValue) {
+      // Включаем системный прокси
+      try {
+        await api.enableProxy({
+          "bindAddress": settingStore.bindAddress,
+          "port": settingStore.port,
+        })
+        pSuccess(t("proxy-switch-on"));
+      } catch (e) {
+        if (e['message']) {
+          pError(e['message'])
+        }
+      }
+    } else {
+      // Выключаем системный прокси
+      await api.disableProxy()
+      pWarning(t("proxy-switch-off"));
+    }
   }
 })
 
