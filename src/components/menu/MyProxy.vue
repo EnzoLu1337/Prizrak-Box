@@ -266,6 +266,9 @@ watch(() => settingStore.systemProxyMode, async (newValue, oldValue) => {
       :title="$t('service.dialog-title')"
       width="450px"
       :close-on-click-modal="true"
+      :append-to-body="true"
+      :modal="true"
+      :z-index="9999"
   >
     <div class="service-dialog">
       <p class="service-dialog__message">{{ $t('service.dialog-message') }}</p>
