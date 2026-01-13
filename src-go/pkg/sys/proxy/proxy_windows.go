@@ -7,9 +7,39 @@ import (
 	"net/textproto"
 	"strconv"
 	"strings"
+	"syscall"
 
 	sys "github.com/legiz-ru/prizrak-box/pkg/sys/cmd"
 )
+
+const (
+	INTERNET_OPTION_SETTINGS_CHANGED = 39
+	INTERNET_OPTION_REFRESH          = 37
+)
+
+var (
+	wininet                  = syscall.NewLazyDLL("wininet.dll")
+	procInternetSetOptionW   = wininet.NewProc("InternetSetOptionW")
+)
+
+// refreshInternetSettings обновляет настройки Internet Explorer
+func refreshInternetSettings() error {
+	// Уведомить систему об изменении настроек
+	procInternetSetOptionW.Call(
+		0,
+		uintptr(INTERNET_OPTION_SETTINGS_CHANGED),
+		0,
+		0,
+	)
+	// Обновить настройки
+	procInternetSetOptionW.Call(
+		0,
+		uintptr(INTERNET_OPTION_REFRESH),
+		0,
+		0,
+	)
+	return nil
+}
 
 func OffAll() error {
 	if err := OffHttps(); err != nil {
@@ -21,7 +51,8 @@ func OffAll() error {
 	if err := OffSocks(); err != nil {
 		return err
 	}
-	return nil
+	// Обновляем настройки Internet Explorer для немедленного применения
+	return refreshInternetSettings()
 }
 
 func SetIgnore(ignores []string) error {
@@ -50,7 +81,13 @@ func OnHttps(addr Addr) error {
 		return err
 	}
 
-	return useProxy(true)
+	err = useProxy(true)
+	if err != nil {
+		return err
+	}
+
+	// Обновляем настройки Internet Explorer для немедленного применения
+	return refreshInternetSettings()
 }
 
 func OffHttps() error {
