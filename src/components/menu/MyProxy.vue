@@ -109,12 +109,16 @@ Events.On("switchProxy", async () => {
 });
 
 
+// Диалог предложения установки сервиса
+const showServiceDialog = ref(false);
+
 // 虚拟网卡开关
 async function tunSwitch() {
   // 检测是否运行在管理员模式下
   const admin = await api.getAdmin();
   if (!admin.data) {
-    pWarning(t("tun-warning"));
+    // Нет прав администратора - предлагаем установить сервис
+    showServiceDialog.value = true;
     Events.Emit({name: "tun", data: false});
     return
   }
@@ -126,7 +130,12 @@ async function tunSwitch() {
     return
   }
 
-  // 检测通过执行后续操作
+  // Включаем TUN
+  await enableTun();
+}
+
+// Включение TUN режима
+async function enableTun() {
   menuStore.setTun(!tunOn.value);
   if (menuStore.tun) {
     api.updateConfigs({
@@ -160,6 +169,32 @@ async function tunSwitch() {
       Events.Emit({name: "tun", data: menuStore.tun});
     });
   }
+}
+
+// Установка сервиса
+async function installServiceHandler() {
+  showServiceDialog.value = false;
+  pLoad(t('service.installing'), async () => {
+    try {
+      // @ts-ignore
+      const installed = await window.pxService.install();
+      if (installed) {
+        pSuccess(t('service.install-success'));
+        // После установки сервиса нужен перезапуск приложения
+        // чтобы backend запустился через сервис
+        pWarning(t('service.restart-required'));
+      } else {
+        pError(t('service.install-failed'));
+      }
+    } catch (e) {
+      pError(t('service.install-failed'));
+    }
+  });
+}
+
+// Закрыть диалог
+function closeServiceDialog() {
+  showServiceDialog.value = false;
 }
 
 Events.On("switchTun", async () => {
@@ -224,6 +259,25 @@ watch(() => settingStore.systemProxyMode, async (newValue, oldValue) => {
       </div>
     </div>
   </div>
+
+  <!-- Диалог предложения установки сервиса -->
+  <el-dialog
+      v-model="showServiceDialog"
+      :title="$t('service.dialog-title')"
+      width="450px"
+      :close-on-click-modal="true"
+  >
+    <div class="service-dialog">
+      <p class="service-dialog__message">{{ $t('service.dialog-message') }}</p>
+      <p class="service-dialog__description">{{ $t('service.dialog-description') }}</p>
+    </div>
+    <template #footer>
+      <div class="service-dialog__footer">
+        <el-button @click="closeServiceDialog">{{ $t('cancel') }}</el-button>
+        <el-button type="primary" @click="installServiceHandler">{{ $t('service.install-btn') }}</el-button>
+      </div>
+    </template>
+  </el-dialog>
 </template>
 
 <style scoped>
@@ -284,5 +338,29 @@ watch(() => settingStore.systemProxyMode, async (newValue, oldValue) => {
 
 .switch-on .switch-circle {
   left: 31px;
+}
+
+/* Стили для диалога сервиса */
+.service-dialog {
+  padding: 10px 0;
+}
+
+.service-dialog__message {
+  font-size: 16px;
+  margin-bottom: 12px;
+  color: var(--text-color);
+}
+
+.service-dialog__description {
+  font-size: 14px;
+  color: var(--text-color);
+  opacity: 0.8;
+  line-height: 1.6;
+}
+
+.service-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 </style>

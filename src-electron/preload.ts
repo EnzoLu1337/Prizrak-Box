@@ -60,3 +60,12 @@ contextBridge.exposeInMainWorld('pxOpen', (url: string) => shell.openExternal(ur
 if (process.platform !== 'darwin') {
     contextBridge.exposeInMainWorld('pxShowBar', () => console.log('pxShowBar'));
 }
+
+// Service API для управления сервисом TUN
+contextBridge.exposeInMainWorld('pxService', {
+    getStatus: () => ipcRenderer.invoke('service:getStatus'),
+    install: () => ipcRenderer.invoke('service:install'),
+    uninstall: () => ipcRenderer.invoke('service:uninstall'),
+    isRunning: () => ipcRenderer.invoke('service:isRunning'),
+    showInstallDialog: () => ipcRenderer.invoke('service:showInstallDialog'),
+});
