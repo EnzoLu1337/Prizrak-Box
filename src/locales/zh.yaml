@@ -313,3 +313,22 @@ errors:
   response-empty: 响应内容为空
   unknown-reason: 原因未知
 
+service:
+  dialog-title: TUN 模式
+  dialog-message: TUN 模式需要管理员权限
+  dialog-description: 您可以安装一个服务，让 TUN 模式无需以管理员身份运行应用程序即可工作。安装服务需要一次性的管理员确认。
+  install-btn: 安装服务
+  installing: 正在安装服务...
+  install-success: 服务安装成功
+  install-failed: 服务安装失败
+  uninstall-btn: 卸载服务
+  uninstalling: 正在卸载服务...
+  uninstall-success: 服务卸载成功
+  uninstall-failed: 服务卸载失败
+  restart-required: 请重启应用程序以应用更改
+  status-running: 服务运行中
+  status-stopped: 服务已停止
+  status-not-installed: 服务未安装
+  mode: 服务模式
+  mode-description: 允许无需管理员权限使用 TUN 模式
+
