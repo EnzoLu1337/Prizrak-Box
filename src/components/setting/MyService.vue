@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import {useI18n} from "vue-i18n";
+import createApi from "@/api";
 import {pSuccess, pError, pWarning} from "@/util/pLoad";
 
 const {t} = useI18n();
+const {proxy} = getCurrentInstance()!;
+const api = createApi(proxy);
 
 // Состояние сервиса
 const serviceStatus = ref<{
@@ -39,7 +42,8 @@ async function installService() {
     const success = await window.pxService.install();
     if (success) {
       pSuccess(t('service.install-success'));
-      pWarning(t('service.restart-required'));
+      await restartBackendAfterInstall();
+      notifyServiceStatusChanged();
       await fetchServiceStatus();
     } else {
       pError(t('service.install-failed'));
@@ -58,7 +62,7 @@ async function uninstallService() {
     const success = await window.pxService.uninstall();
     if (success) {
       pSuccess(t('service.uninstall-success'));
-      pWarning(t('service.restart-required'));
+      notifyServiceStatusChanged();
       await fetchServiceStatus();
     } else {
       pError(t('service.uninstall-failed'));
@@ -67,6 +71,30 @@ async function uninstallService() {
     pError(t('service.uninstall-failed'));
   }
   loading.value = false;
+}
+
+async function restartBackendAfterInstall() {
+  try {
+    await api.exit();
+  } catch (e) {
+    // ignore exit errors
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 800));
+
+  try {
+    // @ts-ignore
+    const restarted = await window.pxService.restartBackend();
+    if (!restarted) {
+      pWarning(t('service.restart-required'));
+    }
+  } catch (e) {
+    pWarning(t('service.restart-required'));
+  }
+}
+
+function notifyServiceStatusChanged() {
+  window.dispatchEvent(new CustomEvent('service-status-updated'));
 }
 
 // Статус в читаемом виде
@@ -99,6 +127,11 @@ const statusType = computed(() => {
 // Проверяем статус при монтировании
 onMounted(() => {
   fetchServiceStatus();
+  window.addEventListener('service-status-updated', fetchServiceStatus);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('service-status-updated', fetchServiceStatus);
 });
 </script>
 

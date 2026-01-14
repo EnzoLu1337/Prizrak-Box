@@ -246,6 +246,16 @@ ipcMain.handle('service:isRunning', async (): Promise<boolean> => {
     return await isServiceRunning();
 });
 
+ipcMain.handle('service:restartBackend', async (): Promise<boolean> => {
+    const addr = storeInfo.listenAddr();
+    if (!addr) {
+        log.error('[Service] Backend restart failed: missing listen address');
+        return false;
+    }
+    await startBackend(addr);
+    return true;
+});
+
 ipcMain.handle('service:showInstallDialog', async (): Promise<'install' | 'skip' | 'cancel'> => {
     return await showServiceInstallDialog();
 });

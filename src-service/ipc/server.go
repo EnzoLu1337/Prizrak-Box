@@ -183,7 +183,7 @@ func (s *Server) handleRequest(req Request) Response {
 		}}
 
 	case "is_admin":
-		return Response{Success: true, Data: true} // Сервис всегда с правами админа
+		return Response{Success: true, Data: isRunningAsAdmin()}
 
 	default:
 		return Response{Success: false, Error: "Unknown command: " + req.Command}

@@ -67,5 +67,6 @@ contextBridge.exposeInMainWorld('pxService', {
     install: () => ipcRenderer.invoke('service:install'),
     uninstall: () => ipcRenderer.invoke('service:uninstall'),
     isRunning: () => ipcRenderer.invoke('service:isRunning'),
+    restartBackend: () => ipcRenderer.invoke('service:restartBackend'),
     showInstallDialog: () => ipcRenderer.invoke('service:showInstallDialog'),
 });
